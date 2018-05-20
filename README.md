@@ -21,6 +21,6 @@ library(eqvispkg)
 To get started, read the introduction vignette: `vignette('introduction', package = 'eqvispkg')`.
 
 ### Travis Badge
-<!--[![Travis-CI Build Status](https://travis-ci.org/skolchin/farspkg.svg?branch=master)](https://travis-ci.org/skolchin/eqvispkg)-->
+[![Travis-CI Build Status](https://travis-ci.org/skolchin/eqvispkg.svg?branch=master)](https://travis-ci.org/skolchin/eqvispkg)
 
 
