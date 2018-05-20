@@ -1,0 +1,164 @@
+---
+title: "Introduction to the Earthquake data visualization package"
+author: "Sergey Kolchin"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE, echo = FALSE, warning=FALSE}
+knitr::opts_chunk$set(collapse = TRUE,comment = "#>")
+knitr::opts_knit$set(root.dir = normalizePath(file.path("..", "inst", "extdata")))
+library(dplyr)
+library(ggplot2)
+library(eqvispkg)
+```
+
+
+This package implements some functions to visualize the data of Significant Earthquakes dataset provided by the National Oceanic and Atmospheric Administration (NOAA).
+
+The package was written for the Capstone project  assignment for the  Johns Hopkins University "Mastering Software Development in R" specialization on Coursera.
+
+
+## The Data
+
+The dataset is available at the NOAA website (<a href="https://www.ngdc.noaa.gov/nndc/struts/results?type_0=Exact&query_0=$ID&t=101650&s=13&d=189&dfn=signif.txt">download link</a>). 
+
+The dataset contains data for all majour earthquakes and tsunamis starting from 2150 B.C. Dataset definition is available at the site.
+
+The package contains the downloaded file as of the May 2018.
+
+## Loading and cleaning the data
+
+To load the dataset, use `eq_load_data()` function:
+```{r load_data}
+raw_data <- eq_load_data("signif.txt")
+```
+
+In order to use, the dataset needs to be cleaned by `eq_clean_data()` and `eq_location_clean()` functions. 
+
+The first one adds two extra variables, DATE, which holds a date of an event, and DATE_C, which is either "BC" or "AD". Also, the function converts LATITUDE and LONGITUDE vaiables to numeric.
+
+The second function strips country name from LOCATION_NAME variable and converts it to Title case.
+
+```{r clean_data}
+data <- raw_data %>% eq_clean_data() %>% eq_location_clean() 
+str(data)
+```
+
+## Visualizating earthquakes on a timeline
+
+The package provides visualization tools to be used with ggplot2 in order to display the eqarthquakes on a timeline.
+
+The `geom_timeline()` function creates a timeline layer, which displays earthquakes on a timeline as points with the diameter relative to earthquake maginitude and color to number of deaths caused by it.
+
+Required aestetic for the function is <b>x</b>, which should be a date variable. Optional aestetics are:
+
+<ul>
+<li><b>y</b>, which could be used to separate the timelines upon a variable (default is 0.1)</li>
+<li><b>colour</b></li> 
+<li><b>alpha</b></li> 
+<li><b>fill</b></li> 
+<li><b>size</b></li>
+</ul>
+
+The `geom_timeline_label()` function adds location or other information to the displayed points.
+
+Required aestetic for the function is <b>x</b>, which should be the same as in the timeline call, and <b>label</b>, which is to provide a name of variable to display. Optional aestetics are:
+
+<ul>
+<li><b>y</b>, which should be the same as set for the main timeline</li>
+<li><b>n_max</b>, which might be set to limit number of displayed labels to n_max largest (by magnitude) earthquakes</li>
+<li><b>magnitude</b>, which has to be set to a column containing magnitude value if n_max is used</li>
+</ul>
+
+Additionally, the `theme_timeline()` function should be used to make a plot area formatted as a timeline.
+
+Sample timeline (without stratification):
+
+```{r sample-timeline-1, fig.width = 8, fig.height = 6}
+h <- data %>% 
+ filter(YEAR >= 2000 & YEAR < 2015 & is.na(FLAG_TSUNAMI)) %>%
+ filter(COUNTRY == "USA")
+
+
+ggplot( h, aes (x = DATE )) +
+  geom_timeline(
+    aes(
+      size = EQ_PRIMARY,
+      alpha = EQ_PRIMARY,
+      colour = TOTAL_DEATHS
+    )
+    ) +
+  scale_y_discrete() +
+  theme_timeline() +
+  labs(
+    size = "Richter scale value",
+    alpha = "Richter scale value",
+    colour = "# deaths"
+  ) +
+  geom_timeline_label(
+    aes(
+      n_max = 5,
+      magnitude = EQ_PRIMARY,
+      label = LOCATION_NAME
+    )
+  )
+```
+
+Sample timeline (with stratification):
+
+```{r sample-timeline-2, fig.width = 8, fig.height = 6}
+h <- data %>%
+ filter(YEAR >= 2000 & YEAR < 2015 & is.na(FLAG_TSUNAMI)) %>%
+ filter(COUNTRY == "USA" | COUNTRY == "CHINA")
+
+ggplot( h, aes (x = DATE )) +
+  geom_timeline(
+    aes(
+      y = COUNTRY,
+      size = EQ_PRIMARY,
+      alpha = EQ_PRIMARY,
+      colour = TOTAL_DEATHS
+    )
+    ) +
+  scale_y_discrete() +
+  theme_timeline() +
+  labs(
+    size = "Richter scale value",
+    alpha = "Richter scale value",
+    colour = "# deaths"
+  ) +
+  geom_timeline_label(
+    aes(
+      y = COUNTRY,
+      n_max = 5,
+      magnitude = EQ_PRIMARY,
+      label = LOCATION_NAME
+    )
+  )
+
+```
+
+
+## Interactive eartquake map
+
+The `eq_map()` function displays earthquakes on a interactive map as a leaflet. A small annotation popup is displayed when a user clicks on an earthquake point.
+
+The `eq_create_label()` is a helper function, which could be used to make a popup text more informative.
+
+Sample usage:
+
+```{r eq_map, fig.width = 8, fig.height = 6}
+h <- data %>% 
+ filter(YEAR >= 2000 & YEAR < 2015 & is.na(FLAG_TSUNAMI)) %>%
+ filter(COUNTRY == "USA")
+h %>% 
+  mutate(
+    popup_text = eq_create_label(.)) %>% 
+  eq_map(annot_col = "popup_text")
+```
+

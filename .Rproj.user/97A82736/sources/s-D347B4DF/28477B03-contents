@@ -1,0 +1,47 @@
+# Test script
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(grid)
+library(leaflet)
+
+# Load the data
+# raw_data <- eq_load_data("inst/extdata/signif.txt")
+# raw_data2 <- eq_location_clean(raw_data)
+# data <- eq_clean_data(raw_data2)
+# h <- data %>%
+#  filter(YEAR >= 2000 & YEAR < 2015 & is.na(FLAG_TSUNAMI)) %>%
+#  filter(COUNTRY == "MEXICO")
+
+# Test the plotting
+# ggplot( h, aes (x = DATE )) +
+#   geom_timeline(
+#     aes(
+#       # y = COUNTRY,
+#       size = EQ_PRIMARY,
+#       alpha = EQ_PRIMARY,
+#       colour = TOTAL_DEATHS
+#     )
+#     ) +
+#   scale_y_discrete() +
+#   theme_timeline() +
+#   labs(
+#     size = "Richter scale value",
+#     alpha = "Richter scale value",
+#     colour = "# deaths"
+#   ) +
+#   geom_timeline_label(
+#     aes(
+#       n_max = 5,
+#       magnitude = EQ_PRIMARY,
+#       # y = COUNTRY,
+#       label = LOCATION_NAME
+#     )
+#   )
+
+# Test the mapping
+h <- data %>%
+ filter(YEAR >= 2000 & YEAR < 2015 & is.na(FLAG_TSUNAMI)) %>%
+ filter(COUNTRY == "USA")
+h %>% mutate(popup_text = eq_create_label(.)) %>% eq_map(annot_col = "popup_text")
+
