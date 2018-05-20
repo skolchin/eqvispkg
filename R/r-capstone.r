@@ -339,14 +339,14 @@ theme_timeline <- function(...) {
 #' @export
 eq_map <- function(data, annot_col = "DATE") {
   # Make a leaflet
-  leaflet::leaflet() %>%
+  leaflet::leaflet(data = data) %>%
     leaflet::addProviderTiles("OpenStreetMap.Mapnik") %>%
     leaflet::addCircleMarkers(
-      data = data,
       lng = ~ LONGITUDE,
       lat = ~ LATITUDE,
       radius = ~ EQ_PRIMARY,
-      popup = ~ data[[annot_col]])
+      popup = ~ data[[annot_col]]
+    )
 }
 
 #' Make up a label for visualization popup
